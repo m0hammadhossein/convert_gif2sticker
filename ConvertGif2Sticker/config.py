@@ -30,6 +30,7 @@ Please send your gif.
         'remove_channel': 'The desired channel was removed from the list of channels',
         'empty_channels': 'The list of channels is empty',
         'join_channel': 'To use the bot, you must subscribe to the following channels',
+        'count_members': '<b>Number of users</b> : {}'
     },
     'fa': {
         'start': '''با سلام خوش آمدید
@@ -52,6 +53,7 @@ Please send your gif.
         'not_exists_channel': 'کانال مورد نظر در لیست کانال ها یافت نشد',
         'remove_channel': 'کانال مورد نظر از لیست کانال ها حذف شد',
         'empty_channels': 'لیست کانال ها خالی است',
-        'join_channel': 'To use the bot, you must subscribe to the following channels'
+        'join_channel': 'برای استفاده از ربات باید در کانال های زیر عضو شوید',
+        'count_members': '<b>تعداد کاربران</b> : {}'
     }
 }

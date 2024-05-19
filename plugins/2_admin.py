@@ -128,3 +128,18 @@ async def get_channels(bot: ApiBot, msg: Message):
 
     txt = '\n'.join([f'<code>{row[0]}</code> : {escape(row[1])}' for row in bot.channels])
     await msg.reply_text(txt, parse_mode=ParseMode.HTML)
+
+
+@ApiBot.on_message(filters.user(ADMIN) & filters.command('members'))
+async def count_members(bot: ApiBot, msg: Message):
+    language_code = msg.from_user.language_code
+
+    if language_code != 'fa':
+        language_code = 'en'
+
+    async with bot.pool.acquire() as connection:
+        res = await connection.fetchrow('SELECT COUNT(*) AS cn_members FROM users;')
+        await msg.reply_text(
+            MESSAGES[language_code]['count_members'].format(res['cn_members']),
+            parse_mode=ParseMode.HTML
+        )

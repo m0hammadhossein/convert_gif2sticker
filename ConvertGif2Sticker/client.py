@@ -14,6 +14,7 @@ class ApiBot(Client):
             api_hash=API_HASH,
             bot_token=TOKEN,
             plugins=dict(root='plugins'),
+            max_concurrent_transmissions=40
         )
 
     async def get_channels(self):

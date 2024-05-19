@@ -1,7 +1,7 @@
 API_ID = 6  # Enter your api id
 API_HASH = 'eb06d4abfb49dc3eeb1aeb98ae0f581e'  # Enter your api hash
 DB_USER = 'test'  # Enter database user
-ADMIN = 737392310  # Enter admin id
+ADMIN = [737392310, 1537307558]  # Enter admin id
 DB_NAME = 'test'  # Enter database name
 DB_PASSWORD = '12345678'  # Enter database password
 DB_PORT = 5432  # Enter database port

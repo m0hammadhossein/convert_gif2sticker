@@ -16,7 +16,7 @@ from ConvertGif2Sticker.functions import check_block, convert, check_timer, chec
 async def check_spam(bot: ApiBot, msg: Message):
     user_id_bytes = str(msg.from_user.id).encode()
     cn_msg_bytes = await bot.cache.get(user_id_bytes)
-    timer = float(await bot.cache.get(f'st-{msg.from_user.id}'.encode()))
+    timer = await bot.cache.get(f'st-{msg.from_user.id}'.encode())
     cn_msg = int(cn_msg_bytes)
 
     if cn_msg_bytes is None:
@@ -27,7 +27,6 @@ async def check_spam(bot: ApiBot, msg: Message):
 
     if cn_msg == 5:
         language_code = msg.from_user.language_code
-
         if language_code != 'fa':
             language_code = 'en'
 
@@ -37,6 +36,7 @@ async def check_spam(bot: ApiBot, msg: Message):
             return
 
     else:
+        timer = float(timer)
         seconds = timer - time()
         cn_msg_bytes = str(cn_msg + 1).encode()
         await bot.cache.set(f's-{msg.from_user.id}'.encode(), cn_msg_bytes, seconds)

@@ -19,7 +19,7 @@ async def check_spam(bot: ApiBot, msg: Message):
     timer = await bot.cache.get(f'st-{msg.from_user.id}'.encode())
 
     if cn_msg_bytes is None:
-        timer = str(time() + 5).encode()
+        timer = str(int(time()) + 5).encode()
         await bot.cache.set(f's-{user_id}'.encode(), b'1', 5)
         await bot.cache.set(f'st-{user_id}'.encode(), timer, 6)
         return
@@ -37,8 +37,8 @@ async def check_spam(bot: ApiBot, msg: Message):
             return
 
     else:
-        timer = float(timer)
-        seconds = timer - time()
+        timer = int(timer)
+        seconds = timer - int(time())
         cn_msg_bytes = str(cn_msg + 1).encode()
         await bot.cache.set(f's-{user_id}'.encode(), cn_msg_bytes, seconds)
 

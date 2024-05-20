@@ -1,3 +1,5 @@
+from asyncio import sleep, create_task
+
 from pyrogram import Client
 from ConvertGif2Sticker.config import API_ID, API_HASH, TOKEN
 
@@ -6,6 +8,7 @@ class ApiBot(Client):
     def __init__(self, pool, cache):
         self.pool = pool
         self.cache = cache
+        self.spam = dict()
         self.channels = dict()
 
         super().__init__(
@@ -21,3 +24,7 @@ class ApiBot(Client):
         async with self.pool.acquire() as connection:
             rows = await connection.fetch('SELECT * FROM channels;')
             self.channels = {row['channel_id']: [row['title'], row['url']] for row in rows}
+
+    async def set_timer(self, key, seconds):
+        await sleep(seconds)
+        del self.spam[key]

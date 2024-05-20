@@ -1,3 +1,4 @@
+from asyncio import create_task
 from os import remove
 from time import time
 from uuid import uuid4
@@ -15,16 +16,19 @@ from ConvertGif2Sticker.functions import check_block, convert, check_timer, chec
 @ApiBot.on_message(~filters.user(ADMIN) & filters.private, group=-1)
 async def check_spam(bot: ApiBot, msg: Message):
     user_id = msg.from_user.id
-    cn_msg_bytes = await bot.cache.get(f's-{user_id}'.encode())
-    timer = await bot.cache.get(f'st-{msg.from_user.id}'.encode())
+    is_block = await check_block(bot.pool, bot.cache, user_id)
 
-    if cn_msg_bytes is None:
-        timer = str(int(time()) + 5).encode()
-        await bot.cache.set(f's-{user_id}'.encode(), b'1', 5)
-        await bot.cache.set(f'st-{user_id}'.encode(), timer, 6)
+    if is_block:
+        await msg.stop_propagation()
+
+    cn_msg = bot.spam.get(user_id)
+
+    if cn_msg is None:
+        bot.spam[user_id] = 1
+        create_task(bot.set_timer(f's-{user_id}', 5))
         return
 
-    cn_msg = int(cn_msg_bytes)
+    bot.spam[user_id] += 1
 
     if cn_msg >= 5:
         language_code = msg.from_user.language_code
@@ -34,22 +38,12 @@ async def check_spam(bot: ApiBot, msg: Message):
         async with bot.pool.acquire() as connection:
             await connection.execute('UPDATE users SET block = TRUE WHERE user_id = $1;', user_id)
             await msg.reply_text(MESSAGES[language_code]['spam_block'], parse_mode=ParseMode.HTML)
-            return
-
-    else:
-        timer = int(timer)
-        seconds = timer - int(time())
-        cn_msg_bytes = str(cn_msg + 1).encode()
-        await bot.cache.set(f's-{user_id}'.encode(), cn_msg_bytes, seconds)
+            await msg.stop_propagation()
 
 
 @ApiBot.on_message(filters.private & filters.command('start'))
 async def start(bot, msg: Message):
     language_code = msg.from_user.language_code
-    is_block = await check_block(bot.pool, bot.cache, msg.from_user.id)
-
-    if is_block:
-        return
 
     if language_code != 'fa':
         language_code = 'en'
@@ -61,10 +55,6 @@ async def start(bot, msg: Message):
 async def create_file(bot: ApiBot, msg: Message):
     user_id = msg.from_user.id
     language_code = msg.from_user.language_code
-    is_block = await check_block(bot.pool, bot.cache, msg.from_user.id)
-
-    if is_block:
-        return
 
     if language_code != 'fa':
         language_code = 'en'

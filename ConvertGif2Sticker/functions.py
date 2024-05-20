@@ -1,6 +1,6 @@
 import asyncio
 import json
-from time import time
+from asyncio import create_task
 from uuid import uuid4
 
 from pyrogram.enums import ChatMemberStatus
@@ -9,39 +9,35 @@ from pyrogram.errors import UserNotParticipant
 from ConvertGif2Sticker import BASE_DIR
 
 
-async def check_block(pool, cache, user_id):
-    user_id_bytes = str(user_id).encode()  # Convert user_id to bytes for cache lookup
-    block_user = await cache.get(user_id_bytes)  # Attempt to retrieve block status from cache
+async def check_block(client, user_id):
+    block_user = client.block.get(user_id)  # Attempt to retrieve block status from cache
 
     if block_user is None:
         # If not found in cache, query the database
-        async with pool.acquire() as connection:
+        async with client.pool.acquire() as connection:
             block_user = await connection.fetchval('SELECT block FROM users WHERE user_id = $1;', user_id, column=0)
             if block_user is None:
                 # If user not in database, insert a new record with block status as False
                 await connection.execute('INSERT INTO users VALUES ($1,$2);', user_id, False)
-                block_user = b'False'
-            else:
-                block_user = str(block_user).encode()  # Convert database result to bytes
 
         # Store the block status in cache for 10 seconds
-        await cache.set(user_id_bytes, block_user, 10)
+        client.block[user_id] = block_user
+        create_task(client.set_timer(user_id, 10))
 
-    return block_user == b'True'  # Return True if the user is blocked
+    return block_user
 
 
 # Check if a timer exists for a user and set a new timer if not
-async def check_timer(cache, user_id):
-    user_id_bytes = f't-{user_id}'.encode()  # Create a cache key for the timer
-    timer = await cache.get(user_id_bytes)  # Attempt to retrieve the timer from cache
+async def check_timer(client, user_id, now_time):
+    timer = client.timer.get(user_id)  # Attempt to retrieve the timer from cache
 
-    if timer is None:
+    if not timer:
         # If no timer exists, set a new timer to expire in 10 seconds
-        dt = str(int(time()) + 10).encode()
-        await cache.set(user_id_bytes, dt, 10)
+        client.timer[user_id] = now_time + 10
+        create_task(client.set_timer(user_id, 10, 1))
         return
 
-    return int(timer)  # Return the timer value
+    return timer  # Return the timer value
 
 
 # Run a subprocess command asynchronously

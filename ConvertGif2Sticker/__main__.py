@@ -1,4 +1,3 @@
-import aiomcache
 import asyncpg
 import uvloop
 from pyrogram import idle
@@ -17,9 +16,8 @@ async def main():
         port=DB_PORT,
         max_size=100
     )
-    cache = aiomcache.Client('127.0.0.1', 11211)
     await create_tables(pool)
-    client = ApiBot(pool, cache)
+    client = ApiBot(pool)
     await client.get_channels()
     await client.start()
     await idle()

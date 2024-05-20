@@ -1,6 +1,5 @@
 from asyncio import create_task
 from os import remove
-from time import time
 from uuid import uuid4
 
 from pyrogram import filters
@@ -16,7 +15,7 @@ from ConvertGif2Sticker.functions import check_block, convert, check_timer, chec
 @ApiBot.on_message(~filters.user(ADMIN) & filters.private, group=-1)
 async def check_spam(bot: ApiBot, msg: Message):
     user_id = msg.from_user.id
-    is_block = await check_block(bot.pool, bot.cache, user_id)
+    is_block = await check_block(bot, user_id)
 
     if is_block:
         await msg.stop_propagation()
@@ -25,12 +24,12 @@ async def check_spam(bot: ApiBot, msg: Message):
 
     if cn_msg is None:
         bot.spam[user_id] = 1
-        create_task(bot.set_timer(f's-{user_id}', 5))
+        create_task(bot.set_timer(user_id, 5, 0))
         return
 
     bot.spam[user_id] += 1
 
-    if cn_msg >= 5:
+    if cn_msg == 5:
         language_code = msg.from_user.language_code
         if language_code != 'fa':
             language_code = 'en'
@@ -55,14 +54,15 @@ async def start(bot, msg: Message):
 async def create_file(bot: ApiBot, msg: Message):
     user_id = msg.from_user.id
     language_code = msg.from_user.language_code
+    now_time = msg.date.timestamp()
 
     if language_code != 'fa':
         language_code = 'en'
 
-    timer = await check_timer(bot.cache, user_id)
+    timer = await check_timer(bot, user_id, now_time)
 
     if timer is not None:
-        wait_time = timer - int(time())
+        wait_time = int(timer - now_time)
         await msg.reply_text(MESSAGES[language_code]['wait'].format(wait_time))
         return
 

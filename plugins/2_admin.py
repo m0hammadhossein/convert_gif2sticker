@@ -126,7 +126,7 @@ async def get_channels(bot: ApiBot, msg: Message):
         await msg.reply_text(MESSAGES[language_code]['empty_channels'])
         return
 
-    txt = '\n'.join([f'<code>{row[0]}</code> : {escape(row[1])}' for row in bot.channels])
+    txt = '\n'.join([f'<code>{key}</code> : {escape(value[0])}' for key, value in bot.channels.items()])
     await msg.reply_text(txt, parse_mode=ParseMode.HTML)
 
 

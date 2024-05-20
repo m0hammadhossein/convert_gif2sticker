@@ -5,9 +5,10 @@ from ConvertGif2Sticker.config import API_ID, API_HASH, TOKEN
 
 
 class ApiBot(Client):
-    def __init__(self, pool, cache):
+    def __init__(self, pool):
         self.pool = pool
-        self.cache = cache
+        self.block = dict()
+        self.timer = dict()
         self.spam = dict()
         self.channels = dict()
 
@@ -25,6 +26,16 @@ class ApiBot(Client):
             rows = await connection.fetch('SELECT * FROM channels;')
             self.channels = {row['channel_id']: [row['title'], row['url']] for row in rows}
 
-    async def set_timer(self, key, seconds):
+    async def set_timer(self, key, seconds, num=None):
         await sleep(seconds)
-        del self.spam[key]
+
+        try:
+            if num == 0:
+                del self.spam[key]
+            elif num == 1:
+                del self.timer[key]
+            else:
+                del self.block[key]
+        except KeyError:
+            pass
+

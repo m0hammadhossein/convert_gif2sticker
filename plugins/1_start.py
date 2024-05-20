@@ -8,8 +8,38 @@ from pyrogram.errors import UserIsBlocked
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 
 from ConvertGif2Sticker.client import ApiBot
-from ConvertGif2Sticker.config import MESSAGES
+from ConvertGif2Sticker.config import MESSAGES, ADMIN
 from ConvertGif2Sticker.functions import check_block, convert, check_timer, check_join_channels
+
+
+@ApiBot.on_message(~filters.user(ADMIN) & filters.private, group=-1)
+async def check_spam(bot: ApiBot, msg: Message):
+    user_id_bytes = str(msg.from_user.id).encode()
+    cn_msg_bytes = await bot.cache.get(user_id_bytes)
+    timer = float(await bot.cache.get(f'st-{msg.from_user.id}'.encode()))
+    cn_msg = int(cn_msg_bytes)
+
+    if cn_msg_bytes is None:
+        timer = str(time() + 5).encode()
+        await bot.cache.set(f's-{msg.from_user.id}'.encode(), b'1', 5)
+        await bot.cache.set(f'st-{msg.from_user.id}'.encode(), timer, 6)
+        return
+
+    if cn_msg == 5:
+        language_code = msg.from_user.language_code
+
+        if language_code != 'fa':
+            language_code = 'en'
+
+        async with bot.pool.acquire() as connection:
+            await connection.execute('UPDATE users SET block = TRUE WHERE user_id = $1;', msg.from_user.id)
+            await msg.reply_text(MESSAGES[language_code]['spam_block'], parse_mode=ParseMode.HTML)
+            return
+
+    else:
+        seconds = timer - time()
+        cn_msg_bytes = str(cn_msg + 1).encode()
+        await bot.cache.set(f's-{msg.from_user.id}'.encode(), cn_msg_bytes, seconds)
 
 
 @ApiBot.on_message(filters.private & filters.command('start'))

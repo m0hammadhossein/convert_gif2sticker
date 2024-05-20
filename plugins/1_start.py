@@ -26,7 +26,7 @@ async def check_spam(bot: ApiBot, msg: Message):
 
     cn_msg = int(cn_msg_bytes)
 
-    if cn_msg == 5:
+    if cn_msg >= 5:
         language_code = msg.from_user.language_code
         if language_code != 'fa':
             language_code = 'en'
